@@ -13,7 +13,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.firebase.client.Firebase;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -35,11 +36,14 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
     private TextView devName;
     private TextView devId;
     private final String TAG = "beacon";
+    private Firebase firebase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Firebase.setAndroidContext(this);
+        firebase = new Firebase("https://sizzling-heat-7504.firebaseio.com/");
 
         showTab = (TextView)findViewById(R.id.showTab);
         pb = (ProgressBar)findViewById(R.id.progressBar);
@@ -110,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
                 for (final Beacon beacon : collection) {
                     if (beacon.getDistance() <= 0.5) {
+                        firebase.child(getDeviceId()).setValue(getLocalBluetoothName());
                         Log.d(TAG, getLocalBluetoothName());
                         Log.d(TAG, "distance: " + beacon.getDistance() + " id1: " + beacon.getId1() + " id2: " + beacon.getId2() + " id3: " + beacon.getId3());
                         runOnUiThread(new Runnable() {
@@ -122,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
                             }
                         });
                     } else {
+                        firebase.child(getDeviceId()).removeValue();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

@@ -4,6 +4,11 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
     repositories { jcenter() }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+    }
     defaultConfig {
         applicationId "com.honghaisen.token"
         minSdkVersion 18
@@ -24,4 +29,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'org.altbeacon:android-beacon-library:2+'
+    compile 'com.firebase:firebase-client-android:2.3.1+'
 }
