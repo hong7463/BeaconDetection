@@ -42,18 +42,23 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //For firebase
         Firebase.setAndroidContext(this);
         firebase = new Firebase("https://sizzling-heat-7504.firebaseio.com/");
 
+        //initial the components
         showTab = (TextView)findViewById(R.id.showTab);
         pb = (ProgressBar)findViewById(R.id.progressBar);
         devName = (TextView)findViewById(R.id.devName);
         devId = (TextView)findViewById(R.id.devId);
 
+        //get the beaconManager
         beaconManager = BeaconManager.getInstanceForApplication(this);
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0118,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
         beaconManager.bind(this);
 
+        //check runtime permission
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if(this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
@@ -66,12 +71,14 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //unbind the beaconManager
         beaconManager.unbind(this);
     }
 
     @Override
     public void onBeaconServiceConnect() {
 
+        //set the beacon monitor
         Region region = new Region("myBeans", null, null, null);
         beaconManager.setMonitorNotifier(new MonitorNotifier() {
             @Override
@@ -89,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
                 Log.d(TAG, "didExitRegion");
                 try {
                     beaconManager.stopRangingBeaconsInRegion(region);
+                    firebase.child(getDeviceId()).setValue(getLocalBluetoothName());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
