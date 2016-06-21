@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
     private final String TAG = "beacon";
     private Firebase firebase;
     private Region region;
-    private boolean connected;
     private SharedPreferences phoneNum;
 
     @Override
@@ -68,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
         //get the beaconManager
         beaconManager = BeaconManager.getInstanceForApplication(this);
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0118,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
-//        beaconManager.bind(this);
 
         //check runtime permission
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -176,10 +174,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // unbind the beaconManager
-        beaconManager.unbind(this);
     }
 
+    //ignore below code, they are useless when using service
     @Override
     public void onBeaconServiceConnect() {
 
@@ -188,7 +185,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
         beaconManager.setMonitorNotifier(new MonitorNotifier() {
             @Override
             public void didEnterRegion(Region region) {
-                connected = true;
                 Log.d(TAG, "didEnterRegion");
                 try {
                     beaconManager.startRangingBeaconsInRegion(region);
@@ -199,7 +195,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
 
             @Override
             public void didExitRegion(Region region) {
-                connected = false;
                 Log.d(TAG, "didExitRegion");
                 try {
                     beaconManager.stopRangingBeaconsInRegion(region);
@@ -272,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
         }
     }
 
+    //get device name
     public String getLocalBluetoothName() {
         if(bluetoothAdapter == null) {
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -283,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
         return name;
     }
 
+    //get device id
     public String getDeviceId() {
         return Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
