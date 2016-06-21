@@ -4,15 +4,19 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -42,13 +46,14 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
     private Firebase firebase;
     private Region region;
     private boolean connected;
+    private SharedPreferences phoneNum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //For firebase
+        //For fire base
         Firebase.setAndroidContext(this);
         firebase = new Firebase("https://sizzling-heat-7504.firebaseio.com/");
 
@@ -56,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
         start = (Button)findViewById(R.id.start);
         stop = (Button)findViewById(R.id.stop);
         pb = (ProgressBar)findViewById(R.id.progressBar);
+
+        //get the shared preference
+        phoneNum = getSharedPreferences("phoneNum", MODE_PRIVATE);
 
         //get the beaconManager
         beaconManager = BeaconManager.getInstanceForApplication(this);
@@ -70,6 +78,34 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
                 requestPermissions(perms, permsRequestCode);
             }
         }
+
+        //ask for user's phone number if user hasn't input his/her phone number before
+        if(!phoneNum.contains("phoneNum")) {
+            final EditText input = new EditText(MainActivity.this);
+            input.setInputType(InputType.TYPE_CLASS_NUMBER);
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Phone Number")
+                    .setMessage("Please Enter your Phone Number:")
+                    .setView(input)
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if(input.getText().toString() != null && !input.getText().toString().equals("")) {
+                                SharedPreferences.Editor editor = phoneNum.edit();
+                                editor.putString("phoneNum", input.getText().toString());
+                                editor.commit();
+                            }
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+        }
     }
 
     @Override
@@ -78,31 +114,61 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer{
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(beaconManager.isBound(MainActivity.this) && connected) {
-                    try {
-                        beaconManager.startRangingBeaconsInRegion(region);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
+
+                //ask for the user's phone number if user hasn't input his/her phone number before
+                if(!phoneNum.contains("phoneNum")) {
+                    final EditText input = new EditText(MainActivity.this);
+                    input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Phone Number")
+                            .setMessage("Please Enter your Phone Number:")
+                            .setView(input)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if(input.getText().toString() != null && !input.getText().toString().equals("")) {
+                                        SharedPreferences.Editor editor = phoneNum.edit();
+                                        editor.putString("phoneNum", input.getText().toString());
+                                        editor.commit();
+                                    }
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .show();
                 }
-                else if(!beaconManager.isBound(MainActivity.this)){
-                    beaconManager.bind(MainActivity.this);
-                }
-                pb.setVisibility(View.VISIBLE);
+                MainActivity.this.startService(new Intent(MainActivity.this, BeaconDetectService.class));
+//                if(beaconManager.isBound(MainActivity.this) && connected) {
+//                    try {
+//                        beaconManager.startRangingBeaconsInRegion(region);
+//                    } catch (RemoteException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                else if(!beaconManager.isBound(MainActivity.this)){
+//                    beaconManager.bind(MainActivity.this);
+//                }
+//                pb.setVisibility(View.VISIBLE);
             }
         });
 
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(beaconManager.isBound(MainActivity.this)) {
-                    try {
-                        beaconManager.stopMonitoringBeaconsInRegion(region);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-                pb.setVisibility(View.INVISIBLE);
+                MainActivity.this.stopService(new Intent(MainActivity.this, BeaconDetectService.class));
+//                if(beaconManager.isBound(MainActivity.this)) {
+//                    try {
+//                        beaconManager.stopMonitoringBeaconsInRegion(region);
+//                    } catch (RemoteException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                pb.setVisibility(View.INVISIBLE);
             }
         });
     }

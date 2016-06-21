@@ -31,3 +31,5 @@ dependencies {
     compile 'org.altbeacon:android-beacon-library:2+'
     compile 'com.firebase:firebase-client-android:2.3.1+'
 }
+apply plugin: 'com.google.gms.google-services'
+
